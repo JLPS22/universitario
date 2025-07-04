@@ -220,8 +220,8 @@
       };
 
       salvarEstudante(estudante);
+      document.getElementById('cadastroForm').reset();
       listarEstudantes();
-      exibirLandingPage(estudante);
     });
 
     window.addEventListener('load', () => {
