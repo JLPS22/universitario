@@ -220,7 +220,8 @@
       };
 
       salvarEstudante(estudante);
-      window.location.href = window.location.pathname + '?id=' + id;
+      listarEstudantes();
+      exibirLandingPage(estudante);
     });
 
     window.addEventListener('load', () => {
