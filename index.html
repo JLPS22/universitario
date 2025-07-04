@@ -160,7 +160,7 @@
         const li = document.createElement('li');
 
         const link = document.createElement('a');
-        link.href = '?id=' + id;
+        link.href = window.location.pathname + '?id=' + id;
         link.textContent = `${estudante.nome} - ${estudante.curso} (${estudante.turno})`;
 
         const btn = document.createElement('button');
@@ -223,14 +223,16 @@
       window.location.href = window.location.pathname + '?id=' + id;
     });
 
-    if (studentId) {
-      const estudante = obterEstudante(studentId);
-      if (estudante) {
-        exibirLandingPage(estudante);
+    window.addEventListener('load', () => {
+      if (studentId) {
+        const estudante = obterEstudante(studentId);
+        if (estudante) {
+          exibirLandingPage(estudante);
+        }
+      } else {
+        listarEstudantes();
       }
-    } else {
-      listarEstudantes();
-    }
+    });
   </script>
 </body>
 </html>
