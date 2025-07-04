@@ -19,9 +19,25 @@
       padding: 20px;
       text-align: center;
     }
+    nav {
+      text-align: center;
+      margin: 10px;
+    }
+    nav button {
+      margin: 5px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      background-color: #cc0000;
+      color: white;
+      cursor: pointer;
+    }
+    nav button:hover {
+      background-color: #a00000;
+    }
     main {
       padding: 20px;
-      max-width: 600px;
+      max-width: 700px;
       margin: auto;
       background: white;
       border-radius: 10px;
@@ -39,7 +55,7 @@
       border-radius: 5px;
       border: 1px solid #ccc;
     }
-    button {
+    button[type="submit"] {
       margin-top: 20px;
       background-color: #cc0000;
       color: white;
@@ -48,7 +64,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    button:hover {
+    button[type="submit"]:hover {
       background-color: #a00000;
     }
     .student-page {
@@ -63,6 +79,23 @@
     .inativo {
       border-color: red;
     }
+    .lista-estudantes {
+      margin-top: 30px;
+    }
+    .lista-estudantes ul {
+      list-style: none;
+      padding: 0;
+    }
+    .lista-estudantes li {
+      margin: 10px 0;
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+    .lista-estudantes a {
+      color: #b30000;
+      text-decoration: none;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -70,41 +103,48 @@
     <h1>Cadastro - Transporte Universitário</h1>
   </header>
 
+  <nav>
+    <button onclick="mostrarCadastro()">Cadastro</button>
+    <button onclick="mostrarLista()">Cadastrados</button>
+  </nav>
+
   <main id="mainContent">
-    <h2>Formulário de Cadastro</h2>
-    <form id="cadastroForm">
-      <label for="nome">Nome Completo</label>
-      <input type="text" id="nome" required>
+    <div id="formContainer">
+      <h2>Formulário de Cadastro</h2>
+      <form id="cadastroForm">
+        <label for="nome">Nome Completo</label>
+        <input type="text" id="nome" required>
 
-      <label for="faculdade">Faculdade</label>
-      <input type="text" id="faculdade" required>
+        <label for="faculdade">Faculdade</label>
+        <input type="text" id="faculdade" required>
 
-      <label for="curso">Curso</label>
-      <input type="text" id="curso" required>
+        <label for="curso">Curso</label>
+        <input type="text" id="curso" required>
 
-      <label for="turno">Turno</label>
-      <select id="turno" required>
-        <option value="Manhã">Manhã</option>
-        <option value="Tarde">Tarde</option>
-        <option value="Noite">Noite</option>
-      </select>
+        <label for="turno">Turno</label>
+        <select id="turno" required>
+          <option value="Manhã">Manhã</option>
+          <option value="Tarde">Tarde</option>
+          <option value="Noite">Noite</option>
+        </select>
 
-      <label for="status">Status</label>
-      <select id="status" required>
-        <option value="Ativo">Ativo</option>
-        <option value="Inativo">Inativo</option>
-      </select>
+        <label for="status">Status</label>
+        <select id="status" required>
+          <option value="Ativo">Ativo</option>
+          <option value="Inativo">Inativo</option>
+        </select>
 
-      <button type="submit">Cadastrar</button>
-    </form>
+        <button type="submit">Cadastrar</button>
+      </form>
+    </div>
 
     <div id="landingContainer"></div>
+    <div id="listaContainer" class="lista-estudantes" style="display:none"></div>
   </main>
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const studentId = urlParams.get('id');
-
     const localStorageKey = 'estudantes';
 
     function salvarEstudante(estudante) {
@@ -118,6 +158,26 @@
       return estudantes[id];
     }
 
+    function listarEstudantes() {
+      const container = document.getElementById('listaContainer');
+      container.innerHTML = '<h2>Estudantes Cadastrados</h2>';
+      const estudantes = JSON.parse(localStorage.getItem(localStorageKey)) || {};
+
+      if (Object.keys(estudantes).length === 0) {
+        container.innerHTML += '<p>Nenhum estudante cadastrado.</p>';
+        return;
+      }
+
+      const ul = document.createElement('ul');
+      for (const id in estudantes) {
+        const estudante = estudantes[id];
+        const li = document.createElement('li');
+        li.innerHTML = `<a href="?id=${id}">${estudante.nome}</a> - ${estudante.curso} (${estudante.turno})`;
+        ul.appendChild(li);
+      }
+      container.appendChild(ul);
+    }
+
     function gerarQRCode(url) {
       const canvas = document.createElement('canvas');
       new QRious({
@@ -129,13 +189,12 @@
     }
 
     function exibirLandingPage(estudante) {
-      const container = document.getElementById('landingContainer');
-      const main = document.getElementById('mainContent');
-      if (main) main.querySelector('form').style.display = 'none';
+      document.getElementById('formContainer').style.display = 'none';
+      document.getElementById('listaContainer').style.display = 'none';
 
+      const container = document.getElementById('landingContainer');
       const statusClass = estudante.status.toLowerCase();
       const url = window.location.origin + window.location.pathname + '?id=' + estudante.id;
-
       const qrCanvas = gerarQRCode(url);
 
       container.innerHTML = `
@@ -149,6 +208,19 @@
         </div>
       `;
       container.querySelector('.student-page').appendChild(qrCanvas);
+    }
+
+    function mostrarCadastro() {
+      document.getElementById('formContainer').style.display = 'block';
+      document.getElementById('landingContainer').innerHTML = '';
+      document.getElementById('listaContainer').style.display = 'none';
+    }
+
+    function mostrarLista() {
+      document.getElementById('formContainer').style.display = 'none';
+      document.getElementById('landingContainer').innerHTML = '';
+      document.getElementById('listaContainer').style.display = 'block';
+      listarEstudantes();
     }
 
     document.getElementById('cadastroForm').addEventListener('submit', function(e) {
