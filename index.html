@@ -19,22 +19,6 @@
       padding: 20px;
       text-align: center;
     }
-    nav {
-      text-align: center;
-      margin: 10px;
-    }
-    nav button {
-      margin: 5px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 5px;
-      background-color: #cc0000;
-      color: white;
-      cursor: pointer;
-    }
-    nav button:hover {
-      background-color: #a00000;
-    }
     main {
       padding: 20px;
       max-width: 700px;
@@ -42,6 +26,12 @@
       background: white;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
     }
     label {
       display: block;
@@ -55,7 +45,7 @@
       border-radius: 5px;
       border: 1px solid #ccc;
     }
-    button[type="submit"] {
+    button[type="submit"], .excluir-btn {
       margin-top: 20px;
       background-color: #cc0000;
       color: white;
@@ -64,7 +54,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    button[type="submit"]:hover {
+    button[type="submit"]:hover, .excluir-btn:hover {
       background-color: #a00000;
     }
     .student-page {
@@ -79,17 +69,13 @@
     .inativo {
       border-color: red;
     }
-    .lista-estudantes {
-      margin-top: 30px;
-    }
-    .lista-estudantes ul {
-      list-style: none;
-      padding: 0;
-    }
     .lista-estudantes li {
       margin: 10px 0;
       padding: 10px;
       border-bottom: 1px solid #ccc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     .lista-estudantes a {
       color: #b30000;
@@ -103,13 +89,8 @@
     <h1>Cadastro - Transporte Universitário</h1>
   </header>
 
-  <nav>
-    <button onclick="mostrarCadastro()">Cadastro</button>
-    <button onclick="mostrarLista()">Cadastrados</button>
-  </nav>
-
   <main id="mainContent">
-    <div id="formContainer">
+    <section id="formContainer">
       <h2>Formulário de Cadastro</h2>
       <form id="cadastroForm">
         <label for="nome">Nome Completo</label>
@@ -136,10 +117,14 @@
 
         <button type="submit">Cadastrar</button>
       </form>
-    </div>
+    </section>
 
-    <div id="landingContainer"></div>
-    <div id="listaContainer" class="lista-estudantes" style="display:none"></div>
+    <section id="listaContainer" class="lista-estudantes">
+      <h2>Estudantes Cadastrados</h2>
+      <ul id="listaEstudantes"></ul>
+    </section>
+
+    <section id="landingContainer"></section>
   </main>
 
   <script>
@@ -158,24 +143,35 @@
       return estudantes[id];
     }
 
+    function excluirEstudante(id) {
+      const estudantes = JSON.parse(localStorage.getItem(localStorageKey)) || {};
+      delete estudantes[id];
+      localStorage.setItem(localStorageKey, JSON.stringify(estudantes));
+      listarEstudantes();
+    }
+
     function listarEstudantes() {
-      const container = document.getElementById('listaContainer');
-      container.innerHTML = '<h2>Estudantes Cadastrados</h2>';
+      const ul = document.getElementById('listaEstudantes');
+      ul.innerHTML = '';
       const estudantes = JSON.parse(localStorage.getItem(localStorageKey)) || {};
 
-      if (Object.keys(estudantes).length === 0) {
-        container.innerHTML += '<p>Nenhum estudante cadastrado.</p>';
-        return;
-      }
-
-      const ul = document.createElement('ul');
       for (const id in estudantes) {
         const estudante = estudantes[id];
         const li = document.createElement('li');
-        li.innerHTML = `<a href="?id=${id}">${estudante.nome}</a> - ${estudante.curso} (${estudante.turno})`;
+
+        const link = document.createElement('a');
+        link.href = '?id=' + id;
+        link.textContent = `${estudante.nome} - ${estudante.curso} (${estudante.turno})`;
+
+        const btn = document.createElement('button');
+        btn.className = 'excluir-btn';
+        btn.textContent = 'Excluir';
+        btn.onclick = () => excluirEstudante(id);
+
+        li.appendChild(link);
+        li.appendChild(btn);
         ul.appendChild(li);
       }
-      container.appendChild(ul);
     }
 
     function gerarQRCode(url) {
@@ -210,19 +206,6 @@
       container.querySelector('.student-page').appendChild(qrCanvas);
     }
 
-    function mostrarCadastro() {
-      document.getElementById('formContainer').style.display = 'block';
-      document.getElementById('landingContainer').innerHTML = '';
-      document.getElementById('listaContainer').style.display = 'none';
-    }
-
-    function mostrarLista() {
-      document.getElementById('formContainer').style.display = 'none';
-      document.getElementById('landingContainer').innerHTML = '';
-      document.getElementById('listaContainer').style.display = 'block';
-      listarEstudantes();
-    }
-
     document.getElementById('cadastroForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const id = Math.random().toString(36).substr(2, 9);
@@ -245,6 +228,8 @@
       if (estudante) {
         exibirLandingPage(estudante);
       }
+    } else {
+      listarEstudantes();
     }
   </script>
 </body>
