@@ -57,12 +57,12 @@
       border-radius: 5px;
       border: 1px solid #ccc;
     }
-    button[type="submit"], .excluir-btn, .login-btn {
-      margin-top: 20px;
+    button[type="submit"], .excluir-btn, .editar-btn, .login-btn {
+      margin-top: 10px;
       background-color: #cc0000;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 8px 16px;
       border-radius: 5px;
       cursor: pointer;
     }
@@ -81,6 +81,20 @@
     .inativo {
       border-color: red;
     }
+    .status-tag {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .status-tag.ativo {
+      background-color: green;
+    }
+    .status-tag.inativo {
+      background-color: red;
+    }
     .lista-estudantes li {
       margin: 10px 0;
       padding: 10px;
@@ -93,6 +107,12 @@
       color: #b30000;
       text-decoration: none;
       font-weight: bold;
+      flex: 1;
+    }
+    .qrcode-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -118,6 +138,7 @@
     <section id="formContainer" style="display:none">
       <h2>Formulário de Cadastro</h2>
       <form id="cadastroForm">
+        <input type="hidden" id="editandoId">
         <label for="nome">Nome Completo</label>
         <input type="text" id="nome" required>
 
@@ -140,7 +161,7 @@
           <option value="Inativo">Inativo</option>
         </select>
 
-        <button type="submit">Cadastrar</button>
+        <button type="submit">Salvar</button>
       </form>
     </section>
 
@@ -176,6 +197,17 @@
       listarEstudantes();
     }
 
+    function editarEstudante(id) {
+      const estudante = obterEstudante(id);
+      document.getElementById('editandoId').value = estudante.id;
+      document.getElementById('nome').value = estudante.nome;
+      document.getElementById('faculdade').value = estudante.faculdade;
+      document.getElementById('curso').value = estudante.curso;
+      document.getElementById('turno').value = estudante.turno;
+      document.getElementById('status').value = estudante.status;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function listarEstudantes() {
       const ul = document.getElementById('listaEstudantes');
       ul.innerHTML = '';
@@ -189,13 +221,19 @@
         link.href = window.location.pathname + '?id=' + id;
         link.textContent = `${estudante.nome} - ${estudante.curso} (${estudante.turno})`;
 
-        const btn = document.createElement('button');
-        btn.className = 'excluir-btn';
-        btn.textContent = 'Excluir';
-        btn.onclick = () => excluirEstudante(id);
+        const editar = document.createElement('button');
+        editar.className = 'editar-btn';
+        editar.textContent = 'Editar';
+        editar.onclick = () => editarEstudante(id);
+
+        const excluir = document.createElement('button');
+        excluir.className = 'excluir-btn';
+        excluir.textContent = 'Excluir';
+        excluir.onclick = () => excluirEstudante(id);
 
         li.appendChild(link);
-        li.appendChild(btn);
+        li.appendChild(editar);
+        li.appendChild(excluir);
         ul.appendChild(li);
       }
     }
@@ -205,7 +243,7 @@
       new QRious({
         element: canvas,
         value: url,
-        size: 150
+        size: 225
       });
       return canvas;
     }
@@ -226,16 +264,17 @@
           <p><strong>Faculdade:</strong> ${estudante.faculdade}</p>
           <p><strong>Curso:</strong> ${estudante.curso}</p>
           <p><strong>Turno:</strong> ${estudante.turno}</p>
-          <p><strong>Status:</strong> ${estudante.status}</p>
+          <span class="status-tag ${statusClass}">${estudante.status}</span>
+          <div class="qrcode-wrapper"></div>
           <p>Link direto: <a href="${url}">${url}</a></p>
         </div>
       `;
-      container.querySelector('.student-page').appendChild(qrCanvas);
+      container.querySelector('.qrcode-wrapper').appendChild(qrCanvas);
     }
 
     document.getElementById('cadastroForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      const id = Math.random().toString(36).substr(2, 9);
+      const id = document.getElementById('editandoId').value || Math.random().toString(36).substr(2, 9);
 
       const estudante = {
         id: id,
@@ -248,6 +287,7 @@
 
       salvarEstudante(estudante);
       document.getElementById('cadastroForm').reset();
+      document.getElementById('editandoId').value = '';
       listarEstudantes();
     });
 
@@ -268,7 +308,6 @@
       }
     });
 
-    // Adiciona botão de logout
     const header = document.querySelector('header');
     const logoutBtn = document.createElement('button');
     logoutBtn.textContent = 'Sair';
@@ -277,22 +316,18 @@
       alert('Você saiu do sistema.');
       location.reload();
     });
-    if (!studentId) {
-      header.appendChild(logoutBtn);
-    }
+    if (!studentId) header.appendChild(logoutBtn);
 
     let idleTimeout;
-    const TEMPO_OCIOSO_MS = 5 * 60 * 1000; // 5 minutos
+    const TEMPO_OCIOSO_MS = 5 * 60 * 1000;
     let avisoTimeout;
 
     function resetarOciosidade() {
       clearTimeout(idleTimeout);
       clearTimeout(avisoTimeout);
-
       avisoTimeout = setTimeout(() => {
         alert('Você será desconectado em 1 minuto por inatividade.');
-      }, TEMPO_OCIOSO_MS - 60000); // alerta após 4 minutos
-
+      }, TEMPO_OCIOSO_MS - 60000);
       idleTimeout = setTimeout(() => {
         localStorage.removeItem('logado');
         alert('Sessão expirada por inatividade. Faça login novamente.');
