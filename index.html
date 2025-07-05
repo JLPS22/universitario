@@ -45,7 +45,7 @@
       border-radius: 5px;
       border: 1px solid #ccc;
     }
-    button[type="submit"], .excluir-btn {
+    button[type="submit"], .excluir-btn, .login-btn {
       margin-top: 20px;
       background-color: #cc0000;
       color: white;
@@ -54,7 +54,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    button[type="submit"]:hover, .excluir-btn:hover {
+    button:hover {
       background-color: #a00000;
     }
     .student-page {
@@ -90,7 +90,20 @@
   </header>
 
   <main id="mainContent">
-    <section id="formContainer">
+    <section id="loginContainer" style="display:none">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <label for="usuario">Usuário</label>
+        <input type="text" id="usuario" required>
+
+        <label for="senha">Senha</label>
+        <input type="password" id="senha" required>
+
+        <button type="submit" class="login-btn">Entrar</button>
+      </form>
+    </section>
+
+    <section id="formContainer" style="display:none">
       <h2>Formulário de Cadastro</h2>
       <form id="cadastroForm">
         <label for="nome">Nome Completo</label>
@@ -119,7 +132,7 @@
       </form>
     </section>
 
-    <section id="listaContainer" class="lista-estudantes">
+    <section id="listaContainer" class="lista-estudantes" style="display:none">
       <h2>Estudantes Cadastrados</h2>
       <ul id="listaEstudantes"></ul>
     </section>
@@ -131,6 +144,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const studentId = urlParams.get('id');
     const localStorageKey = 'estudantes';
+    const senhaCorreta = '407910';
 
     function salvarEstudante(estudante) {
       const estudantes = JSON.parse(localStorage.getItem(localStorageKey)) || {};
@@ -187,6 +201,7 @@
     function exibirLandingPage(estudante) {
       document.getElementById('formContainer').style.display = 'none';
       document.getElementById('listaContainer').style.display = 'none';
+      document.getElementById('loginContainer').style.display = 'none';
 
       const container = document.getElementById('landingContainer');
       const statusClass = estudante.status.toLowerCase();
@@ -224,6 +239,22 @@
       listarEstudantes();
     });
 
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const usuario = document.getElementById('usuario').value;
+      const senha = document.getElementById('senha').value;
+
+      if (usuario === 'admin' && senha === senhaCorreta) {
+        localStorage.setItem('logado', 'true');
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('formContainer').style.display = 'block';
+        document.getElementById('listaContainer').style.display = 'block';
+        listarEstudantes();
+      } else {
+        alert('Usuário ou senha incorretos!');
+      }
+    });
+
     window.addEventListener('load', () => {
       if (studentId) {
         const estudante = obterEstudante(studentId);
@@ -231,7 +262,14 @@
           exibirLandingPage(estudante);
         }
       } else {
-        listarEstudantes();
+        const logado = localStorage.getItem('logado');
+        if (logado === 'true') {
+          document.getElementById('formContainer').style.display = 'block';
+          document.getElementById('listaContainer').style.display = 'block';
+          listarEstudantes();
+        } else {
+          document.getElementById('loginContainer').style.display = 'block';
+        }
       }
     });
   </script>
