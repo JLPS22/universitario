@@ -18,6 +18,18 @@
       color: white;
       padding: 20px;
       text-align: center;
+      position: relative;
+    }
+    header button {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      background-color: #fff;
+      color: #b30000;
+      border: 2px solid #fff;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
     }
     main {
       padding: 20px;
@@ -250,9 +262,46 @@
         document.getElementById('formContainer').style.display = 'block';
         document.getElementById('listaContainer').style.display = 'block';
         listarEstudantes();
+        resetarOciosidade();
       } else {
         alert('Usuário ou senha incorretos!');
       }
+    });
+
+    // Adiciona botão de logout
+    const header = document.querySelector('header');
+    const logoutBtn = document.createElement('button');
+    logoutBtn.textContent = 'Sair';
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('logado');
+      alert('Você saiu do sistema.');
+      location.reload();
+    });
+    if (!studentId) {
+      header.appendChild(logoutBtn);
+    }
+
+    let idleTimeout;
+    const TEMPO_OCIOSO_MS = 5 * 60 * 1000; // 5 minutos
+    let avisoTimeout;
+
+    function resetarOciosidade() {
+      clearTimeout(idleTimeout);
+      clearTimeout(avisoTimeout);
+
+      avisoTimeout = setTimeout(() => {
+        alert('Você será desconectado em 1 minuto por inatividade.');
+      }, TEMPO_OCIOSO_MS - 60000); // alerta após 4 minutos
+
+      idleTimeout = setTimeout(() => {
+        localStorage.removeItem('logado');
+        alert('Sessão expirada por inatividade. Faça login novamente.');
+        location.reload();
+      }, TEMPO_OCIOSO_MS);
+    }
+
+    ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+      document.addEventListener(evt, resetarOciosidade, false);
     });
 
     window.addEventListener('load', () => {
@@ -267,6 +316,7 @@
           document.getElementById('formContainer').style.display = 'block';
           document.getElementById('listaContainer').style.display = 'block';
           listarEstudantes();
+          resetarOciosidade();
         } else {
           document.getElementById('loginContainer').style.display = 'block';
         }
