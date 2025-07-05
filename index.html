@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cadastro - Transporte Universitário</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   <style>
@@ -82,12 +82,15 @@
       border-color: red;
     }
     .status-tag {
-      display: inline-block;
-      padding: 5px 10px;
+      display: block;
+      width: fit-content;
+      margin: 0 auto 20px;
+      padding: 10px 20px;
+      font-size: 1.2em;
       border-radius: 5px;
       color: white;
       font-weight: bold;
-      margin-top: 10px;
+      text-align: center;
     }
     .status-tag.ativo {
       background-color: green;
@@ -126,10 +129,10 @@
       <h2>Login</h2>
       <form id="loginForm">
         <label for="usuario">Usuário</label>
-        <input type="text" id="usuario" required>
+        <input type="text" id="usuario" required />
 
         <label for="senha">Senha</label>
-        <input type="password" id="senha" required>
+        <input type="password" id="senha" required />
 
         <button type="submit" class="login-btn">Entrar</button>
       </form>
@@ -138,15 +141,15 @@
     <section id="formContainer" style="display:none">
       <h2>Formulário de Cadastro</h2>
       <form id="cadastroForm">
-        <input type="hidden" id="editandoId">
+        <input type="hidden" id="editandoId" />
         <label for="nome">Nome Completo</label>
-        <input type="text" id="nome" required>
+        <input type="text" id="nome" required />
 
         <label for="faculdade">Faculdade</label>
-        <input type="text" id="faculdade" required>
+        <input type="text" id="faculdade" required />
 
         <label for="curso">Curso</label>
-        <input type="text" id="curso" required>
+        <input type="text" id="curso" required />
 
         <label for="turno">Turno</label>
         <select id="turno" required>
@@ -267,8 +270,7 @@
           <span class="status-tag ${statusClass}">${estudante.status}</span>
           <div class="qrcode-wrapper"></div>
           <p>Link direto: <a href="${url}">${url}</a></p>
-        </div>
-      `;
+        </div>`;
       container.querySelector('.qrcode-wrapper').appendChild(qrCanvas);
     }
 
