@@ -63,40 +63,42 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const USER_UID = "wPHOxRUJKdPWcW6LXK1DHvdOKsj1";
-
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
 
     async function carregarLanding() {
       if (!id) {
-        document.getElementById("landingContainer").innerHTML = "<p>ID do estudante não informado.</p>";
+        document.body.innerHTML = "<p>ID do estudante não informado.</p>";
         return;
       }
-      const docRef = doc(db, "usuarios", USER_UID, "estudantes", id);
+
+      const docRef = doc(db, "estudantes", id);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
         const est = docSnap.data();
 
-        const container = document.getElementById("landingContainer");
+        const container = document.createElement("div");
+        container.className = "landing";
+
         const statusClass = est.status === "Ativo" ? "ativo-box" : "inativo-box";
 
         container.innerHTML = `
-          <div class="landing">
-            <div class="status-box ${statusClass}">${est.status}</div>
-            <canvas id="qrcode" class="qrcode"></canvas>
-            <div class="info"><strong>Nome:</strong> ${est.nome}</div>
-            <div class="info"><strong>Faculdade:</strong> ${est.faculdade}</div>
-            <div class="info"><strong>Curso:</strong> ${est.curso}</div>
-            <div class="info"><strong>Turno:</strong> ${est.turno}</div>
-          </div>
+          <div class="status-box ${statusClass}">${est.status}</div>
+          <canvas id="qrcode" class="qrcode"></canvas>
+          <div class="info"><strong>Nome:</strong> ${est.nome}</div>
+          <div class="info"><strong>Faculdade:</strong> ${est.faculdade}</div>
+          <div class="info"><strong>Curso:</strong> ${est.curso}</div>
+          <div class="info"><strong>Turno:</strong> ${est.turno}</div>
         `;
 
-        const url = window.location.origin + window.location.pathname + "?id=" + id;
+        document.body.innerHTML = '';
+        document.body.appendChild(container);
+
+        const url = window.location.href;
         QRCode.toCanvas(document.getElementById("qrcode"), url, { width: 225 });
       } else {
-        document.getElementById("landingContainer").innerHTML = "<p>Estudante não encontrado.</p>";
+        document.body.innerHTML = "<p>Estudante não encontrado.</p>";
       }
     }
 
@@ -104,6 +106,6 @@
   </script>
 </head>
 <body>
-  <div id="landingContainer"></div>
+  <p>Carregando...</p>
 </body>
 </html>
