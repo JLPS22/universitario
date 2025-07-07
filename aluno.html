@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transporte Universitário</title>
+  <style>
+    .landing {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+    .status-box {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    .ativo-box {
+      background-color: #4caf50;
+    }
+    .inativo-box {
+      background-color: #f44336;
+    }
+    .info {
+      font-size: 1.2em;
+      margin: 10px 0;
+    }
+    .qrcode {
+      display: block;
+      margin: 20px auto;
+      width: 150px;
+      height: 150px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVs1jcbA9qlS17Rb8HJy-oPgxmyHn_o48",
+      authDomain: "universitario-693d0.firebaseapp.com",
+      projectId: "universitario-693d0",
+      storageBucket: "universitario-693d0.appspot.com",
+      messagingSenderId: "660423807577",
+      appId: "1:660423807577:web:834e3b3c039468fbe7d748",
+      measurementId: "G-LTGM5K16YH"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("id");
+
+    async function carregarLanding() {
+      if (!id) return;
+      const docRef = doc(db, "estudantes", id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const est = docSnap.data();
+
+        const container = document.getElementById("landingContainer");
+        const statusClass = est.status === "Ativo" ? "ativo-box" : "inativo-box";
+
+        container.innerHTML = `
+          <div class="landing">
+            <div class="status-box ${statusClass}">${est.status}</div>
+            <div class="info">Nome: ${est.nome}</div>
+            <div class="info">Faculdade: ${est.faculdade}</div>
+            <div class="info">Curso: ${est.curso}</div>
+            <div class="info">Turno: ${est.turno}</div>
+            <canvas id="qrcode" class="qrcode"></canvas>
+          </div>
+        `;
+
+        const url = window.location.origin + window.location.pathname + '?id=' + id;
+        QRCode.toCanvas(document.getElementById("qrcode"), url, { width: 150 });
+      }
+    }
+
+    carregarLanding();
+  </script>
+</head>
+<body>
+  <div id="landingContainer"></div>
+</body>
+</html>
