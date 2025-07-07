@@ -23,6 +23,7 @@
       border-radius: 6px;
       display: inline-block;
       margin-bottom: 20px;
+      text-align: center;
     }
     .ativo-box {
       background-color: #4caf50;
@@ -36,13 +37,13 @@
     }
     .qrcode {
       display: block;
-      margin: 20px auto;
-      width: 225px; /* aumentado 50% */
+      margin: 0 auto 20px auto;
+      width: 225px;
       height: 225px;
     }
   </style>
 
-  <!-- CDN do QRCode global, sem módulo -->
+  <!-- QRCode via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 
   <script type="module">
@@ -68,9 +69,13 @@
     const id = params.get("id");
 
     async function carregarLanding() {
-      if (!id) return;
+      if (!id) {
+        document.getElementById("landingContainer").innerHTML = "<p>ID do estudante não informado.</p>";
+        return;
+      }
       const docRef = doc(db, "usuarios", USER_UID, "estudantes", id);
       const docSnap = await getDoc(docRef);
+
       if (docSnap.exists()) {
         const est = docSnap.data();
 
@@ -80,15 +85,15 @@
         container.innerHTML = `
           <div class="landing">
             <div class="status-box ${statusClass}">${est.status}</div>
-            <div class="info">Nome: ${est.nome}</div>
-            <div class="info">Faculdade: ${est.faculdade}</div>
-            <div class="info">Curso: ${est.curso}</div>
-            <div class="info">Turno: ${est.turno}</div>
             <canvas id="qrcode" class="qrcode"></canvas>
+            <div class="info"><strong>Nome:</strong> ${est.nome}</div>
+            <div class="info"><strong>Faculdade:</strong> ${est.faculdade}</div>
+            <div class="info"><strong>Curso:</strong> ${est.curso}</div>
+            <div class="info"><strong>Turno:</strong> ${est.turno}</div>
           </div>
         `;
 
-        const url = window.location.origin + window.location.pathname + '?id=' + id;
+        const url = window.location.origin + window.location.pathname + "?id=" + id;
         QRCode.toCanvas(document.getElementById("qrcode"), url, { width: 225 });
       } else {
         document.getElementById("landingContainer").innerHTML = "<p>Estudante não encontrado.</p>";
