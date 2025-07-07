@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transporte Universitário</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Estudante - Transporte Universitário</title>
   <style>
     .landing {
       max-width: 600px;
@@ -37,14 +37,14 @@
     .qrcode {
       display: block;
       margin: 20px auto;
-      width: 150px;
-      height: 150px;
+      width: 225px; /* 150px aumentado 50% */
+      height: 225px;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyCVs1jcbA9qlS17Rb8HJy-oPgxmyHn_o48",
@@ -59,12 +59,14 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    const USER_UID = "wPHOxRUJKdPWcW6LXK1DHvdOKsj1";
+
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
 
     async function carregarLanding() {
       if (!id) return;
-      const docRef = doc(db, "estudantes", id);
+      const docRef = doc(db, "usuarios", USER_UID, "estudantes", id);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const est = docSnap.data();
@@ -84,7 +86,9 @@
         `;
 
         const url = window.location.origin + window.location.pathname + '?id=' + id;
-        QRCode.toCanvas(document.getElementById("qrcode"), url, { width: 150 });
+        QRCode.toCanvas(document.getElementById("qrcode"), url, { width: 225 });
+      } else {
+        document.getElementById("landingContainer").innerHTML = "<p>Estudante não encontrado.</p>";
       }
     }
 
