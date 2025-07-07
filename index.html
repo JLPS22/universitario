@@ -9,7 +9,6 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
   />
   <style>
-    /* ... (mesmo estilo do código anterior) ... */
     body {
       font-family: 'Inter', sans-serif;
       margin: 0;
@@ -17,7 +16,6 @@
       background: #f9f9f9;
       color: #333;
     }
-    /* ... restante do CSS igual ... */
     header,
     main {
       max-width: 600px;
@@ -79,6 +77,10 @@
       margin-right: 10px;
     }
   </style>
+
+  <!-- Adiciona QRCode global -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
   <script type="module">
     import {
       initializeApp
@@ -99,7 +101,6 @@
       deleteDoc,
       updateDoc
     } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-    import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyCVs1jcbA9qlS17Rb8HJy-oPgxmyHn_o48",
@@ -118,9 +119,6 @@
     const USER_UID = "wPHOxRUJKdPWcW6LXK1DHvdOKsj1";
 
     const estudantesCollection = collection(db, "usuarios", USER_UID, "estudantes");
-
-    console.log("Firebase Auth inicializado:", auth);
-    console.log("Script carregado, preparando listener de login.");
 
     const loginForm = document.getElementById("loginForm");
     const form = document.getElementById("cadastroForm");
@@ -141,13 +139,11 @@
 
     onAuthStateChanged(auth, user => {
       if (user) {
-        console.log("Usuário logado:", user.email);
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         carregarEstudantes();
         resetTimer();
       } else {
-        console.log("Nenhum usuário logado.");
         document.getElementById("loginContainer").style.display = "block";
         document.getElementById("appContainer").style.display = "none";
       }
@@ -157,15 +153,11 @@
       e.preventDefault();
       const email = loginForm.email.value;
       const senha = loginForm.senha.value;
-      console.log("Evento submit do login disparado.");
-      console.log("Tentando login com:", email);
       signInWithEmailAndPassword(auth, email, senha)
         .then(userCredential => {
-          console.log("Login sucesso:", userCredential.user.email);
           alert("Login realizado com sucesso!");
         })
         .catch(error => {
-          console.error("Erro no login:", error);
           alert("Falha no login: " + error.message);
         });
     });
