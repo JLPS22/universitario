@@ -9,6 +9,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
   />
   <style>
+    /* ... (mesmo estilo do código anterior) ... */
     body {
       font-family: 'Inter', sans-serif;
       margin: 0;
@@ -16,6 +17,7 @@
       background: #f9f9f9;
       color: #333;
     }
+    /* ... restante do CSS igual ... */
     header,
     main {
       max-width: 600px;
@@ -113,6 +115,10 @@
     const auth = getAuth();
     const db = getFirestore(app);
 
+    const USER_UID = "wPHOxRUJKdPWcW6LXK1DHvdOKsj1";
+
+    const estudantesCollection = collection(db, "usuarios", USER_UID, "estudantes");
+
     console.log("Firebase Auth inicializado:", auth);
     console.log("Script carregado, preparando listener de login.");
 
@@ -173,14 +179,14 @@
         turno: form.turno.value,
         status: form.status.value
       };
-      await addDoc(collection(db, "estudantes"), estudante);
+      await addDoc(estudantesCollection, estudante);
       form.reset();
       carregarEstudantes();
     });
 
     async function carregarEstudantes() {
       lista.innerHTML = "<h2>Cadastrados</h2>";
-      const snap = await getDocs(collection(db, "estudantes"));
+      const snap = await getDocs(estudantesCollection);
       snap.forEach(docu => {
         const est = docu.data();
         const div = document.createElement("div");
@@ -198,7 +204,8 @@
     }
 
     window.editar = async id => {
-      const docSnap = await getDoc(doc(db, "estudantes", id));
+      const docRef = doc(db, "usuarios", USER_UID, "estudantes", id);
+      const docSnap = await getDoc(docRef);
       const est = docSnap.data();
       form.nome.value = est.nome;
       form.faculdade.value = est.faculdade;
@@ -207,7 +214,7 @@
       form.status.value = est.status;
       form.onsubmit = async e => {
         e.preventDefault();
-        await updateDoc(doc(db, "estudantes", id), {
+        await updateDoc(docRef, {
           nome: form.nome.value,
           faculdade: form.faculdade.value,
           curso: form.curso.value,
@@ -221,7 +228,7 @@
     };
 
     window.excluir = async id => {
-      await deleteDoc(doc(db, "estudantes", id));
+      await deleteDoc(doc(db, "usuarios", USER_UID, "estudantes", id));
       carregarEstudantes();
     };
   </script>
