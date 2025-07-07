@@ -4,44 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Estudante - Transporte Universitário</title>
-  <style>
-    .landing {
-      max-width: 600px;
-      margin: 40px auto;
-      padding: 20px;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      font-family: Arial, sans-serif;
-    }
-    .status-box {
-      font-size: 1.5em;
-      font-weight: bold;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 6px;
-      display: inline-block;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-    .ativo-box {
-      background-color: #4caf50;
-    }
-    .inativo-box {
-      background-color: #f44336;
-    }
-    .info {
-      font-size: 1.2em;
-      margin: 10px 0;
-    }
-    .qrcode {
-      display: block;
-      margin: 0 auto 20px auto;
-      width: 225px;
-      height: 225px;
-    }
-  </style>
+  <link rel="stylesheet" href="style/aluno.css" />
 
   <!-- QRCode via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
@@ -72,9 +35,11 @@
         return;
       }
 
-      const docRef = doc(db, "estudantes", id);
+      const UID = "wPHOxRUJKdPWcW6LXK1DHvdOKsj1";
+      const docRef = doc(db, "usuarios", UID, "estudantes", id);
+      console.log(docRef)
+      // const docRef = doc(db, "estudantes", id);
       const docSnap = await getDoc(docRef);
-      console.log(docSnap)
 
       if (docSnap.exists()) {
         const est = docSnap.data();
