@@ -96,6 +96,7 @@
 
     form.addEventListener("submit", async e => {
       e.preventDefault();
+      let alunoExistente = false
       const estudante = {
         nome: form.nome.value,
         faculdade: form.faculdade.value,
@@ -103,7 +104,14 @@
         turno: form.turno.value,
         status: form.status.value
       };
-      await addDoc(estudantesCollection, estudante);
+      const snap = await getDocs(estudantesCollection)
+      snap.forEach(docu => {
+        const est = docu.data()
+        if(est.nome == estudante.nome){
+          alunoExistente = true
+        }        
+      })
+      if(!alunoExistente) await addDoc(estudantesCollection, estudante);
       form.reset();
       carregarEstudantes();
     });
@@ -145,9 +153,9 @@
           turno: form.turno.value,
           status: form.status.value
         });
-        form.reset();
+        // form.reset();
         form.onsubmit = null;
-        carregarEstudantes();
+        window.alert("Usuário Editado com sucesso!")
       };
     };
 
@@ -196,4 +204,3 @@
   </main>
 </body>
 </html>
-<!-- 407910 -->
