@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cadastro Transporte Universitário</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+  />
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -13,22 +16,27 @@
       background: #f9f9f9;
       color: #333;
     }
-    header, main {
+    header,
+    main {
       max-width: 600px;
       margin: 0 auto;
       padding: 20px;
     }
-    h1, h2 {
+    h1,
+    h2 {
       color: #b00020;
     }
-    form, .card {
+    form,
+    .card {
       background: white;
       padding: 20px;
       border-radius: 12px;
       margin-bottom: 20px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     }
-    input, select, button {
+    input,
+    select,
+    button {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
@@ -70,9 +78,25 @@
     }
   </style>
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, getDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      doc,
+      getDoc,
+      deleteDoc,
+      updateDoc
+    } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
     import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js';
 
     const firebaseConfig = {
@@ -88,6 +112,9 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
     const db = getFirestore(app);
+
+    console.log("Firebase Auth inicializado:", auth);
+    console.log("Script carregado, preparando listener de login.");
 
     const loginForm = document.getElementById("loginForm");
     const form = document.getElementById("cadastroForm");
@@ -108,22 +135,33 @@
 
     onAuthStateChanged(auth, user => {
       if (user) {
+        console.log("Usuário logado:", user.email);
         document.getElementById("loginContainer").style.display = "none";
         document.getElementById("appContainer").style.display = "block";
         carregarEstudantes();
         resetTimer();
+      } else {
+        console.log("Nenhum usuário logado.");
+        document.getElementById("loginContainer").style.display = "block";
+        document.getElementById("appContainer").style.display = "none";
       }
     });
 
-    loginForm.addEventListener("submit", async e => {
+    loginForm.addEventListener("submit", e => {
       e.preventDefault();
       const email = loginForm.email.value;
       const senha = loginForm.senha.value;
-      try {
-        await signInWithEmailAndPassword(auth, email, senha);
-      } catch (err) {
-        alert("Falha no login");
-      }
+      console.log("Evento submit do login disparado.");
+      console.log("Tentando login com:", email);
+      signInWithEmailAndPassword(auth, email, senha)
+        .then(userCredential => {
+          console.log("Login sucesso:", userCredential.user.email);
+          alert("Login realizado com sucesso!");
+        })
+        .catch(error => {
+          console.error("Erro no login:", error);
+          alert("Falha no login: " + error.message);
+        });
     });
 
     form.addEventListener("submit", async e => {
@@ -159,7 +197,7 @@
       });
     }
 
-    window.editar = async (id) => {
+    window.editar = async id => {
       const docSnap = await getDoc(doc(db, "estudantes", id));
       const est = docSnap.data();
       form.nome.value = est.nome;
@@ -167,7 +205,7 @@
       form.curso.value = est.curso;
       form.turno.value = est.turno;
       form.status.value = est.status;
-      form.onsubmit = async (e) => {
+      form.onsubmit = async e => {
         e.preventDefault();
         await updateDoc(doc(db, "estudantes", id), {
           nome: form.nome.value,
@@ -179,10 +217,10 @@
         form.reset();
         form.onsubmit = null;
         carregarEstudantes();
-      }
+      };
     };
 
-    window.excluir = async (id) => {
+    window.excluir = async id => {
       await deleteDoc(doc(db, "estudantes", id));
       carregarEstudantes();
     };
@@ -193,8 +231,8 @@
     <div id="loginContainer">
       <h1>Login</h1>
       <form id="loginForm">
-        <input type="email" name="email" placeholder="Seu e-mail" required>
-        <input type="password" name="senha" placeholder="Sua senha" required>
+        <input type="email" name="email" placeholder="Seu e-mail" required />
+        <input type="password" name="senha" placeholder="Sua senha" required />
         <button type="submit">Entrar</button>
       </form>
     </div>
@@ -202,10 +240,10 @@
     <div id="appContainer" style="display:none">
       <h1>Cadastro de Estudantes</h1>
       <form id="cadastroForm">
-        <input type="text" name="nome" placeholder="Nome completo" required>
-        <input type="text" name="faculdade" placeholder="Faculdade" required>
-        <input type="text" name="curso" placeholder="Curso" required>
-        <input type="text" name="turno" placeholder="Turno" required>
+        <input type="text" name="nome" placeholder="Nome completo" required />
+        <input type="text" name="faculdade" placeholder="Faculdade" required />
+        <input type="text" name="curso" placeholder="Curso" required />
+        <input type="text" name="turno" placeholder="Turno" required />
         <select name="status">
           <option value="Ativo">Ativo</option>
           <option value="Inativo">Inativo</option>
