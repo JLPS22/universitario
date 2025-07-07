@@ -1,427 +1,178 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Cadastro - Transporte Universitário (Firebase Modular)</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transporte Universitário</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, getDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
-<!-- QRious para QR Code -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #ffeaea;
-    color: #333;
-    margin: 0; padding: 0;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  header {
-    background-color: #b30000;
-    color: white;
-    padding: 20px;
-    text-align: center;
-    position: relative;
-  }
-  header button {
-    position: absolute;
-    right: 20px; top: 20px;
-    background-color: #fff;
-    color: #b30000;
-    border: 2px solid #fff;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  main {
-    padding: 20px;
-    max-width: 700px;
-    margin: auto;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    min-height: 100vh;
-    box-sizing: border-box;
-  }
-  section {
-    margin-bottom: 30px;
-    padding: 20px;
-    border: 2px solid #ccc;
-    border-radius: 10px;
-    box-sizing: border-box;
-  }
-  label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-  input, select {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    box-sizing: border-box;
-  }
-  button[type="submit"], .excluir-btn, .editar-btn, .login-btn {
-    margin-top: 10px;
-    background-color: #cc0000;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-  button:hover {
-    background-color: #a00000;
-  }
-  .student-page {
-    margin-top: 40px;
-    padding: 20px;
-    border: 5px solid;
-    border-radius: 10px;
-  }
-  .ativo {
-    border-color: green;
-  }
-  .inativo {
-    border-color: red;
-  }
-  .status-tag {
-    display: block;
-    width: fit-content;
-    margin: 0 auto 20px;
-    padding: 15px 30px;
-    font-size: 1.8em;
-    border-radius: 5px;
-    color: white;
-    font-weight: bold;
-    text-align: center;
-  }
-  .status-tag.ativo {
-    background-color: green;
-  }
-  .status-tag.inativo {
-    background-color: red;
-  }
-  .lista-estudantes ul, .lista-estudantes li {
-    margin: 0; padding: 0;
-    list-style: none;
-  }
-  .lista-estudantes li {
-    margin: 10px 0;
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-  .lista-estudantes a {
-    color: #b30000;
-    text-decoration: none;
-    font-weight: bold;
-    flex: 1 1 auto;
-    min-width: 150px;
-  }
-  .qrcode-wrapper {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-  }
-  @media (max-width: 480px) {
-    main {
-      padding: 10px;
-      margin: 5px;
-    }
-    section {
-      padding: 15px;
-    }
-    button[type="submit"], .excluir-btn, .editar-btn, .login-btn {
-      padding: 8px 12px;
-      margin-top: 8px;
-      font-size: 14px;
-    }
-    .lista-estudantes li {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .lista-estudantes a {
-      margin-bottom: 8px;
-      min-width: auto;
-      flex: none;
-    }
-    .lista-estudantes button {
-      margin-right: 8px;
-    }
-    header h1 {
-      font-size: 1.5rem;
-    }
-    .status-tag {
-      font-size: 1.3em;
-      padding: 12px 24px;
-    }
-  }
-</style>
-
-</head>
-<body>
-<header>
-  <h1>Cadastro - Transporte Universitário</h1>
-  <button id="btnLogout" style="display:none;">Sair</button>
-</header>
-
-<main id="mainContent">
-  <section id="loginContainer" style="display:none;">
-    <h2>Login</h2>
-    <form id="loginForm">
-      <label for="usuario">Usuário</label>
-      <input type="text" id="usuario" required />
-      <label for="senha">Senha</label>
-      <input type="password" id="senha" required />
-      <button type="submit" class="login-btn">Entrar</button>
-    </form>
-  </section>
-
-  <section id="formContainer" style="display:none;">
-    <h2>Formulário de Cadastro</h2>
-    <form id="cadastroForm">
-      <input type="hidden" id="editandoId" />
-      <label for="nome">Nome Completo</label>
-      <input type="text" id="nome" required />
-      <label for="faculdade">Faculdade</label>
-      <input type="text" id="faculdade" required />
-      <label for="curso">Curso</label>
-      <input type="text" id="curso" required />
-      <label for="turno">Turno</label>
-      <select id="turno" required>
-        <option value="Manhã">Manhã</option>
-        <option value="Tarde">Tarde</option>
-        <option value="Noite">Noite</option>
-      </select>
-      <label for="status">Status</label>
-      <select id="status" required>
-        <option value="Ativo">Ativo</option>
-        <option value="Inativo">Inativo</option>
-      </select>
-      <button type="submit">Salvar</button>
-    </form>
-  </section>
-
-  <section id="listaContainer" style="display:none;" class="lista-estudantes">
-    <h2>Estudantes Cadastrados</h2>
-    <ul id="listaEstudantes"></ul>
-  </section>
-
-  <section id="landingContainer"></section>
-</main>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
-  import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
-
-  // Sua configuração Firebase (troque pelos seus dados)
-  const firebaseConfig = {
-    apiKey: "AIzaSyCVs1jcbA9qlS17Rb8HJy-oPgxmyHn_o48",
-    authDomain: "universitario-693d0.firebaseapp.com",
-    projectId: "universitario-693d0",
-    storageBucket: "universitario-693d0.firebasestorage.app",
-    messagingSenderId: "660423807577",
-    appId: "1:660423807577:web:834e3b3c039468fbe7d748",
-    measurementId: "G-LTGM5K16YH"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  const senhaCorreta = '407910';
-  const urlParams = new URLSearchParams(window.location.search);
-  const studentId = urlParams.get('id');
-
-  // Funções de CRUD Firestore
-
-  async function salvarEstudante(estudante) {
-    await setDoc(doc(db, "estudantes", estudante.id), estudante);
-  }
-
-  async function obterEstudante(id) {
-    const docSnap = await getDoc(doc(db, "estudantes", id));
-    return docSnap.exists() ? docSnap.data() : null;
-  }
-
-  async function excluirEstudante(id) {
-    await deleteDoc(doc(db, "estudantes", id));
-    listarEstudantes();
-  }
-
-  async function listarEstudantes() {
-    const ul = document.getElementById('listaEstudantes');
-    ul.innerHTML = '';
-    const snapshot = await getDocs(collection(db, "estudantes"));
-    snapshot.forEach(docSnap => {
-      const estudante = docSnap.data();
-      const id = docSnap.id;
-
-      const li = document.createElement('li');
-
-      const link = document.createElement('a');
-      link.href = window.location.pathname + '?id=' + id;
-      link.textContent = `${estudante.nome} - ${estudante.curso} (${estudante.turno})`;
-
-      const editar = document.createElement('button');
-      editar.className = 'editar-btn';
-      editar.textContent = 'Editar';
-      editar.onclick = () => editarEstudante(id);
-
-      const excluir = document.createElement('button');
-      excluir.className = 'excluir-btn';
-      excluir.textContent = 'Excluir';
-      excluir.onclick = () => {
-        if(confirm('Confirma exclusão do estudante?')) excluirEstudante(id);
-      };
-
-      li.appendChild(link);
-      li.appendChild(editar);
-      li.appendChild(excluir);
-      ul.appendChild(li);
-    });
-  }
-
-  async function editarEstudante(id) {
-    const estudante = await obterEstudante(id);
-    if (!estudante) return alert('Estudante não encontrado!');
-    document.getElementById('editandoId').value = estudante.id;
-    document.getElementById('nome').value = estudante.nome;
-    document.getElementById('faculdade').value = estudante.faculdade;
-    document.getElementById('curso').value = estudante.curso;
-    document.getElementById('turno').value = estudante.turno;
-    document.getElementById('status').value = estudante.status;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  function gerarQRCode(url) {
-    const canvas = document.createElement('canvas');
-    new QRious({
-      element: canvas,
-      value: url,
-      size: 340 // 50% maior que 225px padrão
-    });
-    return canvas;
-  }
-
-  async function exibirLandingPage(estudante) {
-    document.getElementById('formContainer').style.display = 'none';
-    document.getElementById('listaContainer').style.display = 'none';
-    document.getElementById('loginContainer').style.display = 'none';
-
-    const container = document.getElementById('landingContainer');
-    const statusClass = estudante.status.toLowerCase();
-    const url = window.location.origin + window.location.pathname + '?id=' + estudante.id;
-    const qrCanvas = gerarQRCode(url);
-
-    container.innerHTML = `
-      <div class="student-page ${statusClass}">
-        <span class="status-tag ${statusClass}">${estudante.status}</span>
-        <h3>${estudante.nome}</h3>
-        <p><strong>Faculdade:</strong> ${estudante.faculdade}</p>
-        <p><strong>Curso:</strong> ${estudante.curso}</p>
-        <p><strong>Turno:</strong> ${estudante.turno}</p>
-        <div class="qrcode-wrapper"></div>
-        <p>Link direto: <a href="${url}">${url}</a></p>
-      </div>
-    `;
-    container.querySelector('.qrcode-wrapper').appendChild(qrCanvas);
-  }
-
-  // Eventos
-
-  document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    let id = document.getElementById('editandoId').value;
-    if (!id) {
-      id = Math.random().toString(36).substr(2, 9);
-    }
-
-    const estudante = {
-      id,
-      nome: document.getElementById('nome').value.trim(),
-      faculdade: document.getElementById('faculdade').value.trim(),
-      curso: document.getElementById('curso').value.trim(),
-      turno: document.getElementById('turno').value,
-      status: document.getElementById('status').value
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVs1jcbA9qlS17Rb8HJy-oPgxmyHn_o48",
+      authDomain: "universitario-693d0.firebaseapp.com",
+      projectId: "universitario-693d0",
+      storageBucket: "universitario-693d0.appspot.com",
+      messagingSenderId: "660423807577",
+      appId: "1:660423807577:web:834e3b3c039468fbe7d748",
+      measurementId: "G-LTGM5K16YH"
     };
 
-    await salvarEstudante(estudante);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore(app);
 
-    document.getElementById('cadastroForm').reset();
-    document.getElementById('editandoId').value = '';
-    listarEstudantes();
-  });
-
-  document.getElementById('loginForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const usuario = document.getElementById('usuario').value.trim();
-    const senha = document.getElementById('senha').value;
-
-    if (usuario === 'admin' && senha === senhaCorreta) {
-      localStorage.setItem('logado', 'true');
-      mostrarPainel();
-      resetarOciosidade();
-    } else {
-      alert('Usuário ou senha incorretos!');
-    }
-  });
-
-  document.getElementById('btnLogout').addEventListener('click', () => {
-    localStorage.removeItem('logado');
-    location.reload();
-  });
-
-  // Controle de ociosidade
-  let idleTimeout;
-  const TEMPO_OCIOSO_MS = 5 * 60 * 1000; // 5 min
-
-  function resetarOciosidade() {
-    clearTimeout(idleTimeout);
-    idleTimeout = setTimeout(() => {
-      localStorage.removeItem('logado');
-      alert('Sessão expirada por inatividade. Faça login novamente.');
-      location.reload();
-    }, TEMPO_OCIOSO_MS);
-  }
-
-  ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
-    document.addEventListener(evt, resetarOciosidade, false);
-  });
-
-  // Inicialização
-  window.addEventListener('load', async () => {
-    if (studentId) {
-      const estudante = await obterEstudante(studentId);
-      if (estudante) {
-        exibirLandingPage(estudante);
+    // Verificar autenticação
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.getElementById('formContainer').style.display = 'block';
+        document.getElementById('listaContainer').style.display = 'block';
+        document.getElementById('loginContainer').style.display = 'none';
+        carregarEstudantes();
       } else {
-        alert('Estudante não encontrado!');
-      }
-    } else {
-      if (localStorage.getItem('logado') === 'true') {
-        mostrarPainel();
-        resetarOciosidade();
-      } else {
+        document.getElementById('formContainer').style.display = 'none';
+        document.getElementById('listaContainer').style.display = 'none';
         document.getElementById('loginContainer').style.display = 'block';
       }
-    }
-  });
+    });
 
-  async function mostrarPainel() {
-    document.getElementById('loginContainer').style.display = 'none';
-    document.getElementById('formContainer').style.display = 'block';
-    document.getElementById('listaContainer').style.display = 'block';
-    document.getElementById('btnLogout').style.display = 'inline-block';
-    await listarEstudantes();
-  }
-</script>
+    // Login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+      try {
+        await signInWithEmailAndPassword(auth, email, senha);
+      } catch (error) {
+        alert('Login inválido.');
+      }
+    });
+
+    // Logout automático após 5 minutos
+    let inactivityTimeout;
+    function resetTimer() {
+      clearTimeout(inactivityTimeout);
+      inactivityTimeout = setTimeout(() => {
+        signOut(auth);
+        alert('Sessão expirada por inatividade. Faça login novamente.');
+      }, 5 * 60 * 1000);
+    }
+    ['click', 'mousemove', 'keypress'].forEach(evt => {
+      window.addEventListener(evt, resetTimer);
+    });
+    resetTimer();
+
+    // Carregar estudantes
+    async function carregarEstudantes() {
+      const lista = document.getElementById('listaContainer');
+      lista.innerHTML = '<h2>Cadastrados</h2>';
+      const querySnapshot = await getDocs(collection(db, "estudantes"));
+      querySnapshot.forEach(docSnap => {
+        const est = docSnap.data();
+        const div = document.createElement('div');
+        div.className = 'estudante-card';
+        div.innerHTML = `
+          <p><strong>${est.nome}</strong> (${est.status})</p>
+          <a href="?id=${docSnap.id}">Ver Página</a>
+          <button onclick="editarEstudante('${docSnap.id}')">Editar</button>
+          <button onclick="excluirEstudante('${docSnap.id}')">Excluir</button>
+        `;
+        lista.appendChild(div);
+      });
+    }
+
+    // Salvar estudante
+    document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('nome').value;
+      const faculdade = document.getElementById('faculdade').value;
+      const curso = document.getElementById('curso').value;
+      const turno = document.getElementById('turno').value;
+      const status = document.getElementById('status').value;
+      await addDoc(collection(db, "estudantes"), { nome, faculdade, curso, turno, status });
+      alert('Estudante cadastrado!');
+      document.getElementById('cadastroForm').reset();
+      carregarEstudantes();
+    });
+
+    window.excluirEstudante = async (id) => {
+      await deleteDoc(doc(db, "estudantes", id));
+      carregarEstudantes();
+    };
+
+    window.editarEstudante = async (id) => {
+      const docSnap = await getDoc(doc(db, "estudantes", id));
+      const est = docSnap.data();
+      document.getElementById('nome').value = est.nome;
+      document.getElementById('faculdade').value = est.faculdade;
+      document.getElementById('curso').value = est.curso;
+      document.getElementById('turno').value = est.turno;
+      document.getElementById('status').value = est.status;
+      document.getElementById('cadastroForm').onsubmit = async (e) => {
+        e.preventDefault();
+        await updateDoc(doc(db, "estudantes", id), {
+          nome: document.getElementById('nome').value,
+          faculdade: document.getElementById('faculdade').value,
+          curso: document.getElementById('curso').value,
+          turno: document.getElementById('turno').value,
+          status: document.getElementById('status').value
+        });
+        alert('Atualizado!');
+        document.getElementById('cadastroForm').reset();
+        document.getElementById('cadastroForm').onsubmit = null;
+        carregarEstudantes();
+      };
+    };
+  </script>
+  <style>
+    .status-tag {
+      display: inline-block;
+      padding: 10px 20px;
+      font-size: 1.2em;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      margin: 20px auto 10px;
+      text-align: center;
+    }
+    .student-page .status-tag {
+      display: block;
+      width: fit-content;
+      margin: 0 auto 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="loginContainer">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Seu e-mail" required><br>
+      <input type="password" id="senha" placeholder="Sua senha" required><br>
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+
+  <div id="formContainer" style="display:none">
+    <h2>Cadastrar Estudante</h2>
+    <form id="cadastroForm">
+      <input type="text" id="nome" placeholder="Nome completo" required><br>
+      <input type="text" id="faculdade" placeholder="Faculdade" required><br>
+      <input type="text" id="curso" placeholder="Curso" required><br>
+      <input type="text" id="turno" placeholder="Turno" required><br>
+      <select id="status">
+        <option value="Ativo">Ativo</option>
+        <option value="Inativo">Inativo</option>
+      </select><br>
+      <button type="submit">Salvar</button>
+    </form>
+  </div>
+
+  <div id="listaContainer" style="display:none">
+    <h2>Cadastrados</h2>
+    <!-- estudantes listados aqui -->
+  </div>
+
+  <div id="landingContainer"></div>
 </body>
 </html>
