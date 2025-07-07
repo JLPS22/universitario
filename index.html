@@ -3,11 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transporte Universitário</title>
+  <title>Cadastro Transporte Universitário</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    header, main {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2 {
+      color: #b00020;
+    }
+    form, .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 1em;
+    }
+    button {
+      background: #b00020;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #c62828;
+    }
+    .status {
+      font-weight: bold;
+      padding: 5px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      color: white;
+    }
+    .status.Ativo {
+      background: #4caf50;
+    }
+    .status.Inativo {
+      background: #f44336;
+    }
+    .qrcode {
+      margin: 15px auto;
+      display: block;
+    }
+    .card button {
+      width: auto;
+      margin-right: 10px;
+    }
+  </style>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
     import { getFirestore, collection, addDoc, getDocs, doc, getDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+    import QRCode from 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyCVs1jcbA9qlS17Rb8HJy-oPgxmyHn_o48",
@@ -23,156 +89,131 @@
     const auth = getAuth();
     const db = getFirestore(app);
 
-    // Verificar autenticação
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        document.getElementById('formContainer').style.display = 'block';
-        document.getElementById('listaContainer').style.display = 'block';
-        document.getElementById('loginContainer').style.display = 'none';
-        carregarEstudantes();
-      } else {
-        document.getElementById('formContainer').style.display = 'none';
-        document.getElementById('listaContainer').style.display = 'none';
-        document.getElementById('loginContainer').style.display = 'block';
-      }
-    });
+    const loginForm = document.getElementById("loginForm");
+    const form = document.getElementById("cadastroForm");
+    const lista = document.getElementById("listaContainer");
 
-    // Login
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('email').value;
-      const senha = document.getElementById('senha').value;
-      try {
-        await signInWithEmailAndPassword(auth, email, senha);
-      } catch (error) {
-        alert('Login inválido.');
-      }
-    });
-
-    // Logout automático após 5 minutos
     let inactivityTimeout;
     function resetTimer() {
       clearTimeout(inactivityTimeout);
       inactivityTimeout = setTimeout(() => {
         signOut(auth);
-        alert('Sessão expirada por inatividade. Faça login novamente.');
+        alert("Sessão encerrada por inatividade.");
+        location.reload();
       }, 5 * 60 * 1000);
     }
     ['click', 'mousemove', 'keypress'].forEach(evt => {
       window.addEventListener(evt, resetTimer);
     });
-    resetTimer();
 
-    // Carregar estudantes
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.getElementById("loginContainer").style.display = "none";
+        document.getElementById("appContainer").style.display = "block";
+        carregarEstudantes();
+        resetTimer();
+      }
+    });
+
+    loginForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      const email = loginForm.email.value;
+      const senha = loginForm.senha.value;
+      try {
+        await signInWithEmailAndPassword(auth, email, senha);
+      } catch (err) {
+        alert("Falha no login");
+      }
+    });
+
+    form.addEventListener("submit", async e => {
+      e.preventDefault();
+      const estudante = {
+        nome: form.nome.value,
+        faculdade: form.faculdade.value,
+        curso: form.curso.value,
+        turno: form.turno.value,
+        status: form.status.value
+      };
+      await addDoc(collection(db, "estudantes"), estudante);
+      form.reset();
+      carregarEstudantes();
+    });
+
     async function carregarEstudantes() {
-      const lista = document.getElementById('listaContainer');
-      lista.innerHTML = '<h2>Cadastrados</h2>';
-      const querySnapshot = await getDocs(collection(db, "estudantes"));
-      querySnapshot.forEach(docSnap => {
-        const est = docSnap.data();
-        const div = document.createElement('div');
-        div.className = 'estudante-card';
+      lista.innerHTML = "<h2>Cadastrados</h2>";
+      const snap = await getDocs(collection(db, "estudantes"));
+      snap.forEach(docu => {
+        const est = docu.data();
+        const div = document.createElement("div");
+        div.className = "card";
         div.innerHTML = `
-          <p><strong>${est.nome}</strong> (${est.status})</p>
-          <a href="?id=${docSnap.id}">Ver Página</a>
-          <button onclick="editarEstudante('${docSnap.id}')">Editar</button>
-          <button onclick="excluirEstudante('${docSnap.id}')">Excluir</button>
+          <p><strong>${est.nome}</strong></p>
+          <p>${est.curso} - ${est.turno}</p>
+          <p class="status ${est.status}">${est.status}</p>
+          <a href="aluno.html?id=${docu.id}" target="_blank">Ver Página</a><br>
+          <button onclick="editar('${docu.id}')">Editar</button>
+          <button onclick="excluir('${docu.id}')">Excluir</button>
         `;
         lista.appendChild(div);
       });
     }
 
-    // Salvar estudante
-    document.getElementById('cadastroForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const nome = document.getElementById('nome').value;
-      const faculdade = document.getElementById('faculdade').value;
-      const curso = document.getElementById('curso').value;
-      const turno = document.getElementById('turno').value;
-      const status = document.getElementById('status').value;
-      await addDoc(collection(db, "estudantes"), { nome, faculdade, curso, turno, status });
-      alert('Estudante cadastrado!');
-      document.getElementById('cadastroForm').reset();
-      carregarEstudantes();
-    });
+    window.editar = async (id) => {
+      const docSnap = await getDoc(doc(db, "estudantes", id));
+      const est = docSnap.data();
+      form.nome.value = est.nome;
+      form.faculdade.value = est.faculdade;
+      form.curso.value = est.curso;
+      form.turno.value = est.turno;
+      form.status.value = est.status;
+      form.onsubmit = async (e) => {
+        e.preventDefault();
+        await updateDoc(doc(db, "estudantes", id), {
+          nome: form.nome.value,
+          faculdade: form.faculdade.value,
+          curso: form.curso.value,
+          turno: form.turno.value,
+          status: form.status.value
+        });
+        form.reset();
+        form.onsubmit = null;
+        carregarEstudantes();
+      }
+    };
 
-    window.excluirEstudante = async (id) => {
+    window.excluir = async (id) => {
       await deleteDoc(doc(db, "estudantes", id));
       carregarEstudantes();
     };
-
-    window.editarEstudante = async (id) => {
-      const docSnap = await getDoc(doc(db, "estudantes", id));
-      const est = docSnap.data();
-      document.getElementById('nome').value = est.nome;
-      document.getElementById('faculdade').value = est.faculdade;
-      document.getElementById('curso').value = est.curso;
-      document.getElementById('turno').value = est.turno;
-      document.getElementById('status').value = est.status;
-      document.getElementById('cadastroForm').onsubmit = async (e) => {
-        e.preventDefault();
-        await updateDoc(doc(db, "estudantes", id), {
-          nome: document.getElementById('nome').value,
-          faculdade: document.getElementById('faculdade').value,
-          curso: document.getElementById('curso').value,
-          turno: document.getElementById('turno').value,
-          status: document.getElementById('status').value
-        });
-        alert('Atualizado!');
-        document.getElementById('cadastroForm').reset();
-        document.getElementById('cadastroForm').onsubmit = null;
-        carregarEstudantes();
-      };
-    };
   </script>
-  <style>
-    .status-tag {
-      display: inline-block;
-      padding: 10px 20px;
-      font-size: 1.2em;
-      border-radius: 5px;
-      color: white;
-      font-weight: bold;
-      margin: 20px auto 10px;
-      text-align: center;
-    }
-    .student-page .status-tag {
-      display: block;
-      width: fit-content;
-      margin: 0 auto 20px;
-    }
-  </style>
 </head>
 <body>
-  <div id="loginContainer">
-    <h2>Login</h2>
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="Seu e-mail" required><br>
-      <input type="password" id="senha" placeholder="Sua senha" required><br>
-      <button type="submit">Entrar</button>
-    </form>
-  </div>
+  <main>
+    <div id="loginContainer">
+      <h1>Login</h1>
+      <form id="loginForm">
+        <input type="email" name="email" placeholder="Seu e-mail" required>
+        <input type="password" name="senha" placeholder="Sua senha" required>
+        <button type="submit">Entrar</button>
+      </form>
+    </div>
 
-  <div id="formContainer" style="display:none">
-    <h2>Cadastrar Estudante</h2>
-    <form id="cadastroForm">
-      <input type="text" id="nome" placeholder="Nome completo" required><br>
-      <input type="text" id="faculdade" placeholder="Faculdade" required><br>
-      <input type="text" id="curso" placeholder="Curso" required><br>
-      <input type="text" id="turno" placeholder="Turno" required><br>
-      <select id="status">
-        <option value="Ativo">Ativo</option>
-        <option value="Inativo">Inativo</option>
-      </select><br>
-      <button type="submit">Salvar</button>
-    </form>
-  </div>
-
-  <div id="listaContainer" style="display:none">
-    <h2>Cadastrados</h2>
-    <!-- estudantes listados aqui -->
-  </div>
-
-  <div id="landingContainer"></div>
+    <div id="appContainer" style="display:none">
+      <h1>Cadastro de Estudantes</h1>
+      <form id="cadastroForm">
+        <input type="text" name="nome" placeholder="Nome completo" required>
+        <input type="text" name="faculdade" placeholder="Faculdade" required>
+        <input type="text" name="curso" placeholder="Curso" required>
+        <input type="text" name="turno" placeholder="Turno" required>
+        <select name="status">
+          <option value="Ativo">Ativo</option>
+          <option value="Inativo">Inativo</option>
+        </select>
+        <button type="submit">Salvar</button>
+      </form>
+      <div id="listaContainer"></div>
+    </div>
+  </main>
 </body>
 </html>
